@@ -9,46 +9,29 @@ from PySide6.QtWidgets import (
     QSpacerItem,
     QSizePolicy,
     QLayout,
+    QDateTimeEdit,
+    QScrollArea,
+    QScrollBar,
 )
 from PySide6.QtCore import Qt
-
-
-class BP_Form_Row(QWidget):
-    def __init__(self, rowtext: str = ""):
-        super().__init__()
-        self.rowtext = rowtext
-        self.setup_gui()
-
-    def setup_gui(self):
-        layout = QHBoxLayout()
-        layout.addSpacing(50)
-        layout.addWidget(QLabel(self.rowtext))
-        if self.rowtext == "": # Header row for measurements
-            texts = ["DP", "SP", "HR"]
-            for text in texts:
-                label = QLabel(text)
-                label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                label.setStyleSheet("max-width: 50px;")
-                layout.addWidget(label)
-        else:
-            for i in range(3):
-                widget = QLineEdit()
-                widget.setStyleSheet("max-width: 48px")
-                layout.addWidget(widget)
-        layout.addSpacing(50)    
-        self.setLayout(layout)
-        
+from bpformrow import BP_Form_Row
+from bphistoryrow import BP_History_Row
+import csv
         
 
 class BP_Control(QWidget):
     def __init__(self):
         super().__init__()
         self.ROWTEXTS = ["", "Morning 1", "Morning 2", "Evening 1", "Evening 2"]
+        self.file_name = "data.csv"
+        self.data = self.read_file(self.file_name)
         self.setup_layout()
         self.setup_widgets()
         self.setLayout(self.page_layout)
-        self.setMinimumWidth(480)
-        self.setMaximumWidth(480)
+        self.setMinimumWidth(640)
+        self.setMaximumWidth(640)
+        self.setMinimumHeight(640)
+        self.setMaximumHeight(640)
         self.show()
 
     def setup_layout(self):
@@ -72,25 +55,101 @@ class BP_Control(QWidget):
 
         # Form
         self.page_layout.addLayout(self.form_layout)
-        # self.form_layout.addLayout(self.form_header)
+
         for text in self.ROWTEXTS:
             row = BP_Form_Row(text)
             row.setStyleSheet("font-size: 16px; max-height: 40px")
             self.form_layout.addWidget(row)
 
         save_button = QPushButton("Save Results")
-        save_button.setStyleSheet("max-width: 100px; margin-top: 20px; margin-left: 60px")
-        save_button.clicked.connect(self.save_results)
+        save_button.setStyleSheet("max-width: 100px; height: 32px; margin-top: 20px; margin-left: 60px")
+        save_button.clicked.connect(self.read_form)
 
         self.form_layout.addWidget(save_button)
         self.form_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.form_layout.addStretch()
 
         # Results
-        self.results_layout.addSpacerItem(QSpacerItem(20, 20, ))
-        self.page_layout.addLayout(self.results_layout)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("border-radius: 10px")
+
+        content_widget = QWidget()
+        content_widget.setLayout(self.results_layout)
+        scroll_area.setWidget(content_widget)
+        
+        for index, row in enumerate(self.data):
+            row_widget = BP_History_Row(row, index, self.delete_measurement)
+            self.results_layout.addWidget(row_widget)
+
+        self.page_layout.addWidget(scroll_area)
+        
 
 
-    def save_results(self):
-        # For now this is just for testing to get data out of the fields in form
-        print(self.form_layout.parentWidget().findChildren(BP_Form_Row)[4].findChildren(QLineEdit)[0].text()) # Prints data in Evening 2 - DP field.
+    def read_file(self, file_name: str) -> list[list[str]]:
+        data = []
+        try:
+            with open(file_name, "r") as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    data.append(row)
+
+        except FileNotFoundError:
+            print("File not found.")
+        except Exception as e:
+            print("Failed to load measurements.") 
+            print(e)
+        else:
+            print("Measurement data loaded.")
+        return data
+
+    def read_form(self):
+        # Find form rows (remove the header row)
+        rows = self.form_layout.parentWidget().findChildren(BP_Form_Row)[1:] 
+        # print(rows)
+        
+        form_data = {}
+        for index, row in enumerate(rows):
+            line_edit_fields = row.findChildren(QLineEdit)
+            form_data[f"row_{index + 1}"] = []
+            for field in line_edit_fields:
+                form_data[f"row_{index + 1}"].append(field.text())
+
+        # print(f"Form data: {form_data}")
+
+        self.save_measurements(form_data, self.file_name)
+
+    
+    def save_measurements(self, data: dict, file_name: str):
+        try:
+            with open(file_name, "a") as file:
+                writer = csv.writer(file)
+                for value in data.values():
+                    if self.is_valid_data(value):
+                        writer.writerow(value)
+
+        except FileNotFoundError:
+            print("File not found.")
+        except Exception as e:
+            print("Failed to save measurements.") 
+            print(e)
+        else:
+            print("Valid measurements saved.")
+
+
+    def is_valid_data(self, value: list[str]) -> bool:
+        if not all(value): # Check that every field at least has a value
+            return False
+        
+        valid = True
+        numbers = "0123456789"
+        for measurement in value[1:]: # Need to have numbers in measurements fields
+            for character in measurement:
+                if character not in numbers:
+                    return False
+        return True
+
+
+    def delete_measurement(self, index):
+        print(f"Delete button clicked. Index number of measurement is {index}")
+        print("one more test")
