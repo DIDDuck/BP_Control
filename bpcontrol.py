@@ -93,6 +93,15 @@ class BP_Control(QWidget):
         for index, row in enumerate(self.data):
             results[index].index = index # update index number for every BP_History_Row
 
+    def on_save_refresh_results(self, form_data: dict):
+        index = len(self.data)
+        for row_data in form_data.values():
+            row_widget = BP_History_Row(row_data, index, self.delete_measurement)
+            self.results_layout.addWidget(row_widget)
+            self.data.append(row_data)
+            index += 1
+        
+
 
     def read_file(self, file_name: str) -> list[list[str]]:
         data = []
@@ -110,6 +119,7 @@ class BP_Control(QWidget):
         else:
             print("Measurement data loaded.")
         return data
+    
 
     def read_form(self):
         # Find form rows (remove the header row)
@@ -125,16 +135,20 @@ class BP_Control(QWidget):
 
         # print(f"Form data: {form_data}")
 
-        self.save_measurements(form_data, self.file_name)
+        cleared_data = self.save_measurements(form_data, self.file_name)
+        self.on_save_refresh_results(cleared_data)
+
 
     
-    def save_measurements(self, data: dict, file_name: str):
+    def save_measurements(self, data: dict, file_name: str) -> dict:
+        cleared_data = {}
         try:
             with open(file_name, "a") as file:
                 writer = csv.writer(file)
-                for value in data.values():
+                for key, value in data.items():
                     if self.is_valid_data(value):
                         writer.writerow(value)
+                        cleared_data[key] = value
 
         except FileNotFoundError:
             print("File not found.")
@@ -143,6 +157,8 @@ class BP_Control(QWidget):
             print(e)
         else:
             print("Valid measurements saved.")
+
+        return cleared_data
 
 
     def is_valid_data(self, value: list[str]) -> bool:
