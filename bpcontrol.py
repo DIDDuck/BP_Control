@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from bpformrow import BP_Form_Row
 from bphistoryrow import BP_History_Row
-import csv
+import csv, fileinput
         
 
 class BP_Control(QWidget):
@@ -25,6 +25,8 @@ class BP_Control(QWidget):
         self.ROWTEXTS = ["", "Morning 1", "Morning 2", "Evening 1", "Evening 2"]
         self.file_name = "data.csv"
         self.data = self.read_file(self.file_name)
+
+        self.setWindowTitle("Blood Pressure Control")
         self.setup_layout()
         self.setup_widgets()
         self.setLayout(self.page_layout)
@@ -74,16 +76,22 @@ class BP_Control(QWidget):
         scroll_area.setWidgetResizable(True)
         scroll_area.setStyleSheet("border-radius: 10px")
 
-        content_widget = QWidget()
-        content_widget.setLayout(self.results_layout)
-        scroll_area.setWidget(content_widget)
+        results_widget = QWidget()
+        results_widget.setLayout(self.results_layout)
+        self.results_widget = results_widget # Provides easy access later
+        scroll_area.setWidget(self.results_widget)
         
         for index, row in enumerate(self.data):
             row_widget = BP_History_Row(row, index, self.delete_measurement)
             self.results_layout.addWidget(row_widget)
 
         self.page_layout.addWidget(scroll_area)
-        
+
+
+    def on_delete_refresh_results(self, results: list[BP_History_Row], idx_to_remove: int):
+        results = results[0:idx_to_remove] + results[idx_to_remove + 1:]
+        for index, row in enumerate(self.data):
+            results[index].index = index # update index number for every BP_History_Row
 
 
     def read_file(self, file_name: str) -> list[list[str]]:
@@ -150,6 +158,23 @@ class BP_Control(QWidget):
         return True
 
 
-    def delete_measurement(self, index):
-        print(f"Delete button clicked. Index number of measurement is {index}")
-        print("one more test")
+    def delete_measurement(self, line_index: int):
+        print(f"Delete button clicked. Index number of measurement is {line_index}")
+
+        try:
+            with fileinput.input([self.file_name],  inplace = True) as f:
+                for index, line in enumerate(f):
+                    if index != line_index: print(line, end = "")
+
+        except:
+            print("Failed to delete measurement.")
+
+        # Remove selected widget/row
+        self.data = self.data[0:line_index] + self.data[line_index + 1:] # data updated
+        widget_to_remove = self.results_widget.findChildren(BP_History_Row)[line_index]
+        self.results_layout.removeWidget(widget_to_remove) # remove widget from layout
+        widget_to_remove.deleteLater() # delete the widget itself (not immediately but later)
+
+        # Update results view
+        children = self.results_widget.findChildren(BP_History_Row) # still includes the widget we want to remove
+        self.on_delete_refresh_results(children, line_index)

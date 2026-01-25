@@ -15,7 +15,7 @@ class BP_History_Row(QWidget):
         self.setLayout(layout)
         
         for idx, field in enumerate(self.data):
-            print("field", field)
+            # print("field", field)
             widget = QLabel(field)
             widget.setAlignment(Qt.AlignmentFlag.AlignVCenter)
             if idx != 0: widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -25,8 +25,7 @@ class BP_History_Row(QWidget):
             layout.addWidget(widget)
 
         delete_button = QPushButton("Delete")
-        delete_button.setProperty("index", self.index)
-        delete_button.clicked.connect(lambda: self.delete_measurement(delete_button.property("index")))
+        delete_button.clicked.connect(lambda: self.delete_measurement(self.index))
         delete_button.setStyleSheet("border: 1px solid black; min-height: 24px; max-width: 50px; max-height: 24px; border-radius: 5px; margin-top: 5px")
         layout.addWidget(delete_button)
 
