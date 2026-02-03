@@ -7,8 +7,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QLineEdit,
     QScrollArea,
+    QDateTimeEdit,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QDateTime
 from bpformrow import BP_Form_Row
 from bphistoryrow import BP_History_Row
 import csv, fileinput
@@ -134,7 +135,10 @@ class BP_Control(QWidget):
         # After saving form data, clear form
         for row in rows:
             for widget in row.row_data_widgets:
-                widget.clear()
+                if type(widget) == QDateTimeEdit:
+                    widget.setDateTime(QDateTime(2000,1,1,0,0,0))
+                else:
+                    widget.clear()
 
     
     def save_measurements(self, data: dict, file_name: str) -> dict:
