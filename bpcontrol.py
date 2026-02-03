@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt, QDateTime
 from bpformrow import BP_Form_Row
 from bphistoryrow import BP_History_Row
 import csv, fileinput
+from datetime import time
         
 
 class BP_Control(QWidget):
@@ -26,8 +27,10 @@ class BP_Control(QWidget):
         self.setup_layout()
         self.setup_widgets()
         self.setLayout(self.page_layout)
+        self.calculate_averages()
         self.setMinimumWidth(640)
         self.setMaximumWidth(640)
+        self.setMaximumHeight(640)
         self.show()
 
     def setup_layout(self):
@@ -39,8 +42,8 @@ class BP_Control(QWidget):
         self.form_layout = QVBoxLayout()
         self.results_layout = QVBoxLayout() # Inside ScrollArea?
 
-        # Results layoput
-        self.result_row_l = QHBoxLayout()
+        # Averages layout
+        self.averages_layout = QHBoxLayout()
 
     def setup_widgets(self):
         # Header
@@ -65,6 +68,19 @@ class BP_Control(QWidget):
         self.form_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.form_layout.addStretch()
 
+        # Averages
+        self.avg_label = QLabel("Averages")
+        self.avg_morning = QLabel("")
+        self.avg_evening = QLabel("")
+        self.averages_layout.addWidget(self.avg_label)
+        self.averages_layout.addWidget(self.avg_morning)
+        self.averages_layout.addWidget(self.avg_evening)
+        self.averages_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+
+        self.averages = QWidget()
+        self.averages.setLayout(self.averages_layout)
+        self.page_layout.addWidget(self.averages)
+
         # Results
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -86,6 +102,7 @@ class BP_Control(QWidget):
         results = results[0:idx_to_remove] + results[idx_to_remove + 1:]
         for index, row in enumerate(self.data):
             results[index].index = index # update index number for every BP_History_Row
+        self.calculate_averages()
 
     def on_save_refresh_results(self, form_data: dict):
         index = len(self.data)
@@ -94,6 +111,8 @@ class BP_Control(QWidget):
             self.results_layout.addWidget(row_widget)
             self.data.append(row_data)
             index += 1
+        self.calculate_averages()
+        
         
 
 
@@ -196,3 +215,41 @@ class BP_Control(QWidget):
         # Update results view
         children = self.results_widget.findChildren(BP_History_Row) # still includes the widget we want to remove
         self.on_delete_refresh_results(children, line_index)
+
+    
+    def calculate_averages(self):
+        morning_sp = {"sum": 0, "number": 0, "avg": 0}
+        morning_dp = {"sum": 0, "number": 0, "avg": 0}
+        morning_hr = {"sum": 0, "number": 0, "avg": 0}
+        evening_sp = {"sum": 0, "number": 0, "avg": 0}
+        evening_dp = {"sum": 0, "number": 0, "avg": 0}
+        evening_hr = {"sum": 0, "number": 0, "avg": 0}
+        
+        for row in self.data:
+            # print(row[0])
+            # print(time.strptime(row[0], "%d.%m.%Y %H.%M"))
+            time_of_day = time.strptime(row[0], "%d.%m.%Y %H.%M")
+            if time_of_day < time(hour = 12):
+                morning_sp["sum"] += int(row[1])
+                morning_sp["number"] += 1
+                morning_dp["sum"] += int(row[2])
+                morning_dp["number"] += 1
+                morning_hr["sum"] += int(row[3])
+                morning_hr["number"] += 1
+            else:
+                evening_sp["sum"] += int(row[1])
+                evening_sp["number"] += 1
+                evening_dp["sum"] += int(row[2])
+                evening_dp["number"] += 1
+                evening_hr["sum"] += int(row[3])
+                evening_hr["number"] += 1
+
+        morning_sp["avg"] = morning_sp["sum"]/morning_sp["number"] if morning_sp["number"] != 0 else 0
+        morning_dp["avg"] = morning_dp["sum"]/morning_dp["number"] if morning_dp["number"] != 0 else 0
+        morning_hr["avg"] = morning_hr["sum"]/morning_hr["number"] if morning_hr["number"] != 0 else 0
+        evening_sp["avg"] = evening_sp["sum"]/evening_sp["number"] if evening_sp["number"] != 0 else 0
+        evening_dp["avg"] = evening_dp["sum"]/evening_dp["number"] if evening_dp["number"] != 0 else 0
+        evening_hr["avg"] = evening_hr["sum"]/evening_hr["number"] if evening_hr["number"] != 0 else 0
+        
+        self.avg_morning.setText(f"Morning BP: {morning_sp["avg"]:.1f}" + " / " + f"{morning_dp["avg"]:.1f}" + "  " + f"HR: {morning_hr["avg"]:.1f}")
+        self.avg_evening.setText(f"- Evening BP: {evening_sp["avg"]:.1f}" + " / " + f"{evening_dp["avg"]:.1f}" + "  " + f"HR: {evening_hr["avg"]:.1f}")
