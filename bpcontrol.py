@@ -6,12 +6,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QLineEdit,
-    QSpacerItem,
-    QSizePolicy,
-    QLayout,
-    QDateTimeEdit,
     QScrollArea,
-    QScrollBar,
 )
 from PySide6.QtCore import Qt
 from bpformrow import BP_Form_Row
@@ -32,8 +27,6 @@ class BP_Control(QWidget):
         self.setLayout(self.page_layout)
         self.setMinimumWidth(640)
         self.setMaximumWidth(640)
-        self.setMinimumHeight(640)
-        self.setMaximumHeight(640)
         self.show()
 
     def setup_layout(self):
@@ -138,6 +131,10 @@ class BP_Control(QWidget):
         cleared_data = self.save_measurements(form_data, self.file_name)
         self.on_save_refresh_results(cleared_data)
 
+        # After saving form data, clear form
+        for row in rows:
+            for widget in row.row_data_widgets:
+                widget.clear()
 
     
     def save_measurements(self, data: dict, file_name: str) -> dict:
@@ -146,7 +143,7 @@ class BP_Control(QWidget):
             with open(file_name, "a") as file:
                 writer = csv.writer(file)
                 for key, value in data.items():
-                    if self.is_valid_data(value):
+                    if self.is_valid_data(value): # Check validity of entered data
                         writer.writerow(value)
                         cleared_data[key] = value
 
@@ -184,6 +181,7 @@ class BP_Control(QWidget):
 
         except:
             print("Failed to delete measurement.")
+            return
 
         # Remove selected widget/row
         self.data = self.data[0:line_index] + self.data[line_index + 1:] # data updated

@@ -7,13 +7,14 @@ class BP_Form_Row(QWidget):
     def __init__(self, rowtext: str = ""):
         super().__init__()
         self.rowtext = rowtext
+        self.row_data_widgets = []
         self.setup_gui()
 
     def setup_gui(self):
         layout = QHBoxLayout()
         layout.addSpacing(50)
         layout.addWidget(QLabel(self.rowtext))
-        self.texts = ["Date & Time", "DP", "SP", "HR"]
+        self.texts = ["Date & Time", "SP", "DP", "HR"]
 
         if self.rowtext == "": # Header row for measurements
             for text in self.texts:
@@ -23,15 +24,16 @@ class BP_Form_Row(QWidget):
                 layout.addWidget(label)
         else:
             for text in self.texts:
-                widget = QLineEdit(alignment=Qt.AlignmentFlag.AlignHCenter)
+                widget = None
                 if text == "Date & Time":
                     widget = QDateTimeEdit(alignment=Qt.AlignmentFlag.AlignHCenter)
                     widget.setAlignment(Qt.AlignmentFlag.AlignLeft)
                     widget.setStyleSheet("font-size: 14px; max-width: 200px;")
+                    self.row_data_widgets.append(widget)
                 else:
                     widget = QLineEdit(alignment=Qt.AlignmentFlag.AlignHCenter)
                     widget.setStyleSheet("font-size: 14px; max-width: 48px")  
-
+                    self.row_data_widgets.append(widget)
                 layout.addWidget(widget)
         layout.addSpacing(50)    
         self.setLayout(layout)
