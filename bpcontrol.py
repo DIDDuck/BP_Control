@@ -164,6 +164,7 @@ class BP_Control(QWidget):
         plt.ylim((50, 150))
         plt.xlabel("Date and Time", loc="center", fontsize=14)
         plt.legend(loc="upper left", fontsize = 9)
+        plt.grid(True)
         plt.subplots_adjust(bottom = 0.31, top = 0.95)
 
         try:
