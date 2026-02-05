@@ -12,3 +12,4 @@ wheels/
 # Measurement data
 data.csv
 testdata.csv
+*.png

@@ -10,18 +10,24 @@ from PySide6.QtWidgets import (
     QDateTimeEdit,
 )
 from PySide6.QtCore import Qt, QDateTime
+from PySide6.QtGui import QPixmap
 from bpformrow import BP_Form_Row
 from bphistoryrow import BP_History_Row
 import csv, fileinput
 from datetime import time
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
         
 
 class BP_Control(QWidget):
     def __init__(self):
         super().__init__()
         self.ROWTEXTS = ["", "Morning 1", "Morning 2", "Evening 1", "Evening 2"]
+        self.graph_exists = False
         self.file_name = "data.csv"
         self.data = self.read_file(self.file_name)
+        self.update_dataframe()
 
         self.setWindowTitle("Blood Pressure Control")
         self.setup_layout()
@@ -30,7 +36,7 @@ class BP_Control(QWidget):
         self.calculate_averages()
         self.setMinimumWidth(640)
         self.setMaximumWidth(640)
-        self.setMaximumHeight(640)
+        self.setMaximumHeight(960)
         self.show()
 
     def setup_layout(self):
@@ -79,7 +85,14 @@ class BP_Control(QWidget):
 
         self.averages = QWidget()
         self.averages.setLayout(self.averages_layout)
-        self.page_layout.addWidget(self.averages)
+        self.page_layout.addWidget(self.averages)         
+
+        # Show Graph Button
+        graph_all_button = QPushButton("Show Data Graph")
+        graph_all_button.setStyleSheet("max-width: 150px; height: 32px; margin-top: 20px; margin-left: 60px")
+        graph_all_button.clicked.connect(self.plot_data)
+
+        self.page_layout.addWidget(graph_all_button)
 
         # Results
         scroll_area = QScrollArea()
@@ -103,6 +116,8 @@ class BP_Control(QWidget):
         for index, row in enumerate(self.data):
             results[index].index = index # update index number for every BP_History_Row
         self.calculate_averages()
+        self.update_dataframe()
+
 
     def on_save_refresh_results(self, form_data: dict):
         index = len(self.data)
@@ -112,9 +127,8 @@ class BP_Control(QWidget):
             self.data.append(row_data)
             index += 1
         self.calculate_averages()
+        self.update_dataframe()
         
-        
-
 
     def read_file(self, file_name: str) -> list[list[str]]:
         data = []
@@ -133,6 +147,35 @@ class BP_Control(QWidget):
             print("Measurement data loaded.")
         return data
     
+
+    def update_dataframe(self):
+        self.df = pd.DataFrame(self.data)
+        self.df.rename(columns={0: "Date and Time", 1: "Systolic Pressure", 2: "Diastolic Pressure", 3: "Heart Rate"}, inplace=True)
+
+
+    def plot_data(self):
+        plt.close("all")
+        plt.figure(figsize=(9, 5))
+        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Systolic Pressure"], dtype=int), color="orange", label="Systolic Pressure")
+        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Diastolic Pressure"], dtype=int), color="blue", label="Diastolic Pressure")
+        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Heart Rate"], dtype=int), color="red", label="Heart Rate")
+        plt.xticks(rotation=90)
+        plt.ylabel("Pressure & HR", fontsize = 14)
+        plt.ylim((50, 150))
+        plt.xlabel("Date and Time", loc="center", fontsize=14)
+        plt.legend(loc="upper left", fontsize = 9)
+        plt.subplots_adjust(bottom = 0.31, top = 0.95)
+
+        try:
+            plt.savefig("graph_all.png") # Save the figure in a file
+        except:
+            "Failed to save graph."
+            self.graph_exists = False
+            return
+        
+        self.graph_exists = True
+        if self.graph_exists: plt.show()
+            
 
     def read_form(self):
         # Find form rows (remove the header row)
