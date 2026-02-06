@@ -149,31 +149,71 @@ class BP_Control(QWidget):
     
 
     def update_dataframe(self):
+
+        def check_time(dt: str):
+            t = time.strptime(dt, "%d.%m.%Y %H.%M")
+            if t < time(hour = 12):
+                return "morning" 
+            return "evening"
+
         self.df = pd.DataFrame(self.data)
         self.df.rename(columns={0: "Date and Time", 1: "Systolic Pressure", 2: "Diastolic Pressure", 3: "Heart Rate"}, inplace=True)
+
+        df_times = pd.DataFrame([check_time(dt) for dt in self.df["Date and Time"]], columns = ["Time"])
+        df_combined = pd.concat([self.df, df_times], axis = 1)
+
+        self.df_morning = self.df[df_combined["Time"] == "morning"]
+        self.df_evening = self.df[df_combined["Time"] == "evening"]
+
+        self.df_morning = self.df_morning.astype({"Systolic Pressure": "int32", "Diastolic Pressure": "int32", "Heart Rate": "int32"})
+        self.df_evening = self.df_evening.astype({"Systolic Pressure": "int32", "Diastolic Pressure": "int32", "Heart Rate": "int32"})
+
+        print(self.df_morning.dtypes)
 
 
     def plot_data(self):
         plt.close("all")
-        plt.figure(figsize=(9, 5))
-        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Systolic Pressure"], dtype=int), color="orange", label="Systolic Pressure")
-        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Diastolic Pressure"], dtype=int), color="blue", label="Diastolic Pressure")
-        plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Heart Rate"], dtype=int), color="red", label="Heart Rate")
-        plt.xticks(rotation=90)
-        plt.ylabel("Pressure & HR", fontsize = 14)
-        plt.ylim((50, 150))
-        plt.xlabel("Date and Time", loc="center", fontsize=14)
-        plt.legend(loc="upper left", fontsize = 9)
-        plt.grid(True)
-        plt.subplots_adjust(bottom = 0.31, top = 0.95)
 
-        try:
-            plt.savefig("graph_all.png") # Save the figure in a file
-        except:
-            "Failed to save graph."
-            self.graph_exists = False
-            return
-        
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize = (9, 10))
+
+        # Graph 1 - morning
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_morning["Systolic Pressure"].mean():.0f})")
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_morning["Diastolic Pressure"].mean():.0f})")
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_morning["Heart Rate"].mean():.0f})")
+        ax1.set_ylim(50, 150)
+        ax1.tick_params(axis="x", labelrotation = 90, labelsize = 9)
+        ax1.set_xlabel("Date and Time", loc = "center", labelpad = 8.0, fontsize = 10)
+        ax1.set_ylabel("Pressure & HR", fontsize = 10)
+        ax1.set_title("Morning", fontsize = 14)
+        ax1.legend(loc="upper left", fontsize = 8)
+        ax1.grid(True)
+        ax1.set_position([0.13, 0.65, 0.8, 0.3])
+
+        # Graph 2 - evening
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_evening["Systolic Pressure"].mean():.0f})")
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_evening["Diastolic Pressure"].mean():.0f})")
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_evening["Heart Rate"].mean():.0f})")
+        ax2.set_ylim(50, 150)
+        ax2.tick_params(axis="x", labelrotation = 90, labelsize = 9)
+        ax2.set_xlabel("Date and Time", loc = "center", labelpad = 8.0, fontsize = 10)
+        ax2.set_ylabel("Pressure & HR", fontsize = 10)
+        ax2.set_title("Evening", fontsize = 14)
+        ax2.legend(loc="upper left", fontsize = 8)
+        ax2.grid(True)
+        ax2.set_position([0.13, 0.17, 0.8, 0.3])
+
+        # plt.figure(figsize=(9, 5))
+        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Systolic Pressure"], dtype=int), color="orange", label="Systolic Pressure")
+        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Diastolic Pressure"], dtype=int), color="blue", label="Diastolic Pressure")
+        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Heart Rate"], dtype=int), color="red", label="Heart Rate")
+        # plt.xticks(rotation=90)
+        # plt.ylabel("Pressure & HR", fontsize = 14)
+        # plt.ylim((50, 150))
+        # plt.xlabel("Date and Time", loc="center", fontsize=14)
+        # plt.legend(loc="upper left", fontsize = 9)
+        # plt.grid(True)
+        # plt.subplots_adjust(bottom = 0.31, top = 0.95)
+
         self.graph_exists = True
         if self.graph_exists: plt.show()
             
