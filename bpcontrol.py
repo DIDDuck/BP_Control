@@ -115,8 +115,8 @@ class BP_Control(QWidget):
         results = results[0:idx_to_remove] + results[idx_to_remove + 1:]
         for index, row in enumerate(self.data):
             results[index].index = index # update index number for every BP_History_Row
-        self.calculate_averages()
         self.update_dataframe()
+        self.calculate_averages()
 
 
     def on_save_refresh_results(self, form_data: dict):
@@ -126,8 +126,8 @@ class BP_Control(QWidget):
             self.results_layout.addWidget(row_widget)
             self.data.append(row_data)
             index += 1
-        self.calculate_averages()
         self.update_dataframe()
+        self.calculate_averages()
         
 
     def read_file(self, file_name: str) -> list[list[str]]:
@@ -201,18 +201,6 @@ class BP_Control(QWidget):
         ax2.legend(loc="upper left", fontsize = 8)
         ax2.grid(True)
         ax2.set_position([0.13, 0.17, 0.8, 0.3])
-
-        # plt.figure(figsize=(9, 5))
-        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Systolic Pressure"], dtype=int), color="orange", label="Systolic Pressure")
-        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Diastolic Pressure"], dtype=int), color="blue", label="Diastolic Pressure")
-        # plt.plot(np.array(self.df["Date and Time"]), np.array(self.df["Heart Rate"], dtype=int), color="red", label="Heart Rate")
-        # plt.xticks(rotation=90)
-        # plt.ylabel("Pressure & HR", fontsize = 14)
-        # plt.ylim((50, 150))
-        # plt.xlabel("Date and Time", loc="center", fontsize=14)
-        # plt.legend(loc="upper left", fontsize = 9)
-        # plt.grid(True)
-        # plt.subplots_adjust(bottom = 0.31, top = 0.95)
 
         self.graph_exists = True
         if self.graph_exists: plt.show()
@@ -302,38 +290,14 @@ class BP_Control(QWidget):
 
     
     def calculate_averages(self):
-        morning_sp = {"sum": 0, "number": 0, "avg": 0}
-        morning_dp = {"sum": 0, "number": 0, "avg": 0}
-        morning_hr = {"sum": 0, "number": 0, "avg": 0}
-        evening_sp = {"sum": 0, "number": 0, "avg": 0}
-        evening_dp = {"sum": 0, "number": 0, "avg": 0}
-        evening_hr = {"sum": 0, "number": 0, "avg": 0}
-        
-        for row in self.data:
-            # print(row[0])
-            # print(time.strptime(row[0], "%d.%m.%Y %H.%M"))
-            time_of_day = time.strptime(row[0], "%d.%m.%Y %H.%M")
-            if time_of_day < time(hour = 12):
-                morning_sp["sum"] += int(row[1])
-                morning_sp["number"] += 1
-                morning_dp["sum"] += int(row[2])
-                morning_dp["number"] += 1
-                morning_hr["sum"] += int(row[3])
-                morning_hr["number"] += 1
-            else:
-                evening_sp["sum"] += int(row[1])
-                evening_sp["number"] += 1
-                evening_dp["sum"] += int(row[2])
-                evening_dp["number"] += 1
-                evening_hr["sum"] += int(row[3])
-                evening_hr["number"] += 1
 
-        morning_sp["avg"] = morning_sp["sum"]/morning_sp["number"] if morning_sp["number"] != 0 else 0
-        morning_dp["avg"] = morning_dp["sum"]/morning_dp["number"] if morning_dp["number"] != 0 else 0
-        morning_hr["avg"] = morning_hr["sum"]/morning_hr["number"] if morning_hr["number"] != 0 else 0
-        evening_sp["avg"] = evening_sp["sum"]/evening_sp["number"] if evening_sp["number"] != 0 else 0
-        evening_dp["avg"] = evening_dp["sum"]/evening_dp["number"] if evening_dp["number"] != 0 else 0
-        evening_hr["avg"] = evening_hr["sum"]/evening_hr["number"] if evening_hr["number"] != 0 else 0
-        
-        self.avg_morning.setText(f"Morning BP: {morning_sp["avg"]:.1f}" + " / " + f"{morning_dp["avg"]:.1f}" + "  " + f"HR: {morning_hr["avg"]:.1f}")
-        self.avg_evening.setText(f"- Evening BP: {evening_sp["avg"]:.1f}" + " / " + f"{evening_dp["avg"]:.1f}" + "  " + f"HR: {evening_hr["avg"]:.1f}")
+        # Averages using Pandas
+        self.morning_sp_avg = self.df_morning["Systolic Pressure"].mean()
+        self.morning_dp_avg = self.df_morning["Diastolic Pressure"].mean()
+        self.morning_hr_avg = self.df_morning["Heart Rate"].mean()
+        self.evening_sp_avg = self.df_evening["Systolic Pressure"].mean()
+        self.evening_dp_avg = self.df_evening["Diastolic Pressure"].mean()
+        self.evening_hr_avg = self.df_evening["Heart Rate"].mean()
+
+        self.avg_morning.setText(f"Morning BP: {self.morning_sp_avg:.1f}" + " / " + f"{self.morning_dp_avg:.1f}" + "  " + f"HR: {self.morning_hr_avg:.1f}")
+        self.avg_evening.setText(f"- Evening BP: {self.evening_sp_avg:.1f}" + " / " + f"{self.evening_dp_avg:.1f}" + "  " + f"HR: {self.evening_hr_avg:.1f}")
