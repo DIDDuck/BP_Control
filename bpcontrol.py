@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QDateTimeEdit,
 )
 from PySide6.QtCore import Qt, QDateTime
-from PySide6.QtGui import QPixmap
 from bpformrow import BP_Form_Row
 from bphistoryrow import BP_History_Row
 import csv, fileinput
@@ -35,6 +34,7 @@ class BP_Control(QWidget):
         self.calculate_averages()
         self.setMinimumWidth(640)
         self.setMaximumWidth(640)
+        self.setMinimumHeight(640)
         self.setMaximumHeight(960)
         self.show()
 
@@ -46,6 +46,7 @@ class BP_Control(QWidget):
         self.header_layout = QVBoxLayout()
         self.form_layout = QVBoxLayout()
         self.results_layout = QVBoxLayout() # Inside ScrollArea?
+        self.results_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Averages layout
         self.averages_layout = QHBoxLayout()
