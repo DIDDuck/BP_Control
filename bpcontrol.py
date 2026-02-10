@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import (
-    QApplication,
     QLabel,
     QWidget,
     QVBoxLayout,
@@ -75,7 +74,7 @@ class BP_Control(QWidget):
         self.form_layout.addStretch()
 
         # Averages
-        self.avg_label = QLabel("Averages")
+        self.avg_label = QLabel("Averages:")
         self.avg_morning = QLabel("")
         self.avg_evening = QLabel("")
         self.averages_layout.addWidget(self.avg_label)
@@ -155,9 +154,15 @@ class BP_Control(QWidget):
             if t < time(hour = 12):
                 return "morning" 
             return "evening"
-
+        
         self.df = pd.DataFrame(self.data)
+        
         self.df.rename(columns={0: "Date and Time", 1: "Systolic Pressure", 2: "Diastolic Pressure", 3: "Heart Rate"}, inplace=True)
+
+        if self.df.size == 0:
+            self.df_morning = self.df
+            self.df_evening = self.df
+            return
 
         df_times = pd.DataFrame([check_time(dt) for dt in self.df["Date and Time"]], columns = ["Time"])
         df_combined = pd.concat([self.df, df_times], axis = 1)
@@ -168,10 +173,14 @@ class BP_Control(QWidget):
         self.df_morning = self.df_morning.astype({"Systolic Pressure": "int32", "Diastolic Pressure": "int32", "Heart Rate": "int32"})
         self.df_evening = self.df_evening.astype({"Systolic Pressure": "int32", "Diastolic Pressure": "int32", "Heart Rate": "int32"})
 
-        print(self.df_morning.dtypes)
+        # print(self.df_morning.dtypes)
 
 
     def plot_data(self):
+
+        if self.df.size == 0:
+            return
+
         plt.close("all")
 
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize = (9, 10))
@@ -207,7 +216,7 @@ class BP_Control(QWidget):
             
 
     def read_form(self):
-        # Find form rows (remove the header row)
+        # Find form row objects (remove the header row)
         rows = self.form_layout.parentWidget().findChildren(BP_Form_Row)[1:] 
         # print(rows)
         
@@ -233,14 +242,14 @@ class BP_Control(QWidget):
 
     
     def save_measurements(self, data: dict, file_name: str) -> dict:
-        cleared_data = {}
+        checked_data = {}
         try:
             with open(file_name, "a") as file:
                 writer = csv.writer(file)
                 for key, value in data.items():
                     if self.is_valid_data(value): # Check validity of entered data
                         writer.writerow(value)
-                        cleared_data[key] = value
+                        checked_data[key] = value
 
         except FileNotFoundError:
             print("File not found.")
@@ -250,7 +259,7 @@ class BP_Control(QWidget):
         else:
             print("Valid measurements saved.")
 
-        return cleared_data
+        return checked_data
 
 
     def is_valid_data(self, value: list[str]) -> bool:
@@ -291,13 +300,45 @@ class BP_Control(QWidget):
     
     def calculate_averages(self):
 
-        # Averages using Pandas
-        self.morning_sp_avg = self.df_morning["Systolic Pressure"].mean()
-        self.morning_dp_avg = self.df_morning["Diastolic Pressure"].mean()
-        self.morning_hr_avg = self.df_morning["Heart Rate"].mean()
-        self.evening_sp_avg = self.df_evening["Systolic Pressure"].mean()
-        self.evening_dp_avg = self.df_evening["Diastolic Pressure"].mean()
-        self.evening_hr_avg = self.df_evening["Heart Rate"].mean()
+        # No data available
+        if self.df.size == 0:
+            self.avg_morning.setText("No morning data.")
+            self.avg_evening.setText("No evening data.")
+            return
+        
+        if self.df_morning.size == 0:
+            morning_data = False
+            self.avg_morning.setText("No morning data.")
+        else:
+            morning_data = True
 
-        self.avg_morning.setText(f"Morning BP: {self.morning_sp_avg:.1f}" + " / " + f"{self.morning_dp_avg:.1f}" + "  " + f"HR: {self.morning_hr_avg:.1f}")
-        self.avg_evening.setText(f"- Evening BP: {self.evening_sp_avg:.1f}" + " / " + f"{self.evening_dp_avg:.1f}" + "  " + f"HR: {self.evening_hr_avg:.1f}")
+
+        if self.df_evening.size == 0:
+            evening_data = False
+            self.avg_morning.setText("No morning data.")
+        else:
+            evening_data = True
+
+
+        # Averages using Pandas
+        if morning_data:
+            self.morning_sp_avg = self.df_morning["Systolic Pressure"].mean()
+            self.morning_dp_avg = self.df_morning["Diastolic Pressure"].mean()
+            self.morning_hr_avg = self.df_morning["Heart Rate"].mean()
+
+            self.avg_morning.setText(f"Morning BP: {self.morning_sp_avg:.1f}" + " / " + f"{self.morning_dp_avg:.1f}" + "  " + f"HR: {self.morning_hr_avg:.1f}")
+
+        else:
+            self.avg_morning.setText("No morning data.")
+
+        
+        if evening_data:
+            self.evening_sp_avg = self.df_evening["Systolic Pressure"].mean() 
+            self.evening_dp_avg = self.df_evening["Diastolic Pressure"].mean()
+            self.evening_hr_avg = self.df_evening["Heart Rate"].mean()
+
+            self.avg_evening.setText(f"- Evening BP: {self.evening_sp_avg:.1f}" + " / " + f"{self.evening_dp_avg:.1f}" + "  " + f"HR: {self.evening_hr_avg:.1f}")
+
+        else: 
+            self.avg_evening.setText("No evening data.")
+        
