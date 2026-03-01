@@ -37,7 +37,7 @@ class BP_Form_Row(QWidget):
                 if text == "Date & Time":
                     widget = QDateTimeEdit(alignment=Qt.AlignmentFlag.AlignHCenter)
                     widget.setAlignment(Qt.AlignmentFlag.AlignLeft)
-                    widget.setDisplayFormat("dd.MM.yyyy HH.mm")
+                    widget.setDisplayFormat("d.M.yyyy H.mm")
                     widget.setStyleSheet("font-size: 14px; max-width: 200px;")
                     self.row_data_widgets.append(widget)
                 else:
