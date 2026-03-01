@@ -184,14 +184,15 @@ class BP_Control(QWidget):
 
         plt.close("all")
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize = (9, 10))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize = (9, 7))
 
         # Graph 1 - morning
         ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_morning["Systolic Pressure"].mean():.0f})")
         ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_morning["Diastolic Pressure"].mean():.0f})")
         ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_morning["Heart Rate"].mean():.0f})")
         ax1.set_ylim(50, 150)
-        ax1.tick_params(axis="x", labelrotation = 90, labelsize = 9)
+        ax1.tick_params(axis="x", labelrotation = 35, labelsize = 7)
+        plt.setp(ax1.get_xticklabels(), ha='right') 
         ax1.set_xlabel("Date and Time", loc = "center", labelpad = 8.0, fontsize = 10)
         ax1.set_ylabel("Pressure & HR", fontsize = 10)
         ax1.set_title("Morning", fontsize = 14)
@@ -204,14 +205,15 @@ class BP_Control(QWidget):
         ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_evening["Diastolic Pressure"].mean():.0f})")
         ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_evening["Heart Rate"].mean():.0f})")
         ax2.set_ylim(50, 150)
-        ax2.tick_params(axis="x", labelrotation = 90, labelsize = 9)
+        ax2.tick_params(axis="x", labelrotation = 35, labelsize = 7)
+        plt.setp(ax2.get_xticklabels(), ha='right') 
         ax2.set_xlabel("Date and Time", loc = "center", labelpad = 8.0, fontsize = 10)
         ax2.set_ylabel("Pressure & HR", fontsize = 10)
         ax2.set_title("Evening", fontsize = 14)
         ax2.legend(loc="upper left", fontsize = 8)
         ax2.grid(True)
         ax2.set_position([0.13, 0.17, 0.8, 0.3])
-
+        
         self.graph_exists = True
         if self.graph_exists: plt.show()
             
