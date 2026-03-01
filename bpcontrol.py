@@ -245,8 +245,8 @@ class BP_Control(QWidget):
     def save_measurements(self, data: dict, file_name: str) -> dict:
         checked_data = {}
         try:
-            with open(file_name, "a") as file:
-                writer = csv.writer(file)
+            with open(file_name, "a", newline="") as file:
+                writer = csv.writer(file, lineterminator="\n")
                 for key, value in data.items():
                     if self.is_valid_data(value): # Check validity of entered data
                         writer.writerow(value)
