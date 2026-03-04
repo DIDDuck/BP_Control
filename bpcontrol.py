@@ -187,9 +187,9 @@ class BP_Control(QWidget):
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize = (9, 7))
 
         # Graph 1 - morning
-        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_morning["Systolic Pressure"].mean():.0f})")
-        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_morning["Diastolic Pressure"].mean():.0f})")
-        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_morning["Heart Rate"].mean():.0f})")
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_morning["Systolic Pressure"].mean():.0f})", marker="o", markersize=4)
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_morning["Diastolic Pressure"].mean():.0f})", marker="o", markersize=4)
+        ax1.plot(np.array(self.df_morning["Date and Time"]), np.array(self.df_morning["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_morning["Heart Rate"].mean():.0f})", marker="o", markersize=4)
         ax1.set_ylim(50, 150)
         ax1.tick_params(axis="x", labelrotation = 35, labelsize = 7)
         plt.setp(ax1.get_xticklabels(), ha='right') 
@@ -201,9 +201,9 @@ class BP_Control(QWidget):
         ax1.set_position([0.13, 0.65, 0.8, 0.3])
 
         # Graph 2 - evening
-        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_evening["Systolic Pressure"].mean():.0f})")
-        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_evening["Diastolic Pressure"].mean():.0f})")
-        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_evening["Heart Rate"].mean():.0f})")
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Systolic Pressure"], dtype=int), color="orange", label=f"Systolic Pressure (avg: {self.df_evening["Systolic Pressure"].mean():.0f})", marker="o", markersize=4)
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Diastolic Pressure"], dtype=int), color="blue", label=f"Diastolic Pressure (avg: {self.df_evening["Diastolic Pressure"].mean():.0f})", marker="o", markersize=4)
+        ax2.plot(np.array(self.df_evening["Date and Time"]), np.array(self.df_evening["Heart Rate"], dtype=int), color="red", label=f"Heart Rate (avg: {self.df_evening["Heart Rate"].mean():.0f})", marker="o", markersize=4)
         ax2.set_ylim(50, 150)
         ax2.tick_params(axis="x", labelrotation = 35, labelsize = 7)
         plt.setp(ax2.get_xticklabels(), ha='right') 
