@@ -2,7 +2,16 @@ from PySide6.QtWidgets import (QWidget, QHBoxLayout, QLabel, QPushButton)
 from PySide6.QtCore import Qt
 
 class BP_History_Row(QWidget):
+    """Creates one row in results list."""
+
     def __init__(self, data: list[str], index: int, delete_measurement: function):
+        """Initialize the row.
+        
+        Args:
+            data: Data for the row in a list of strings.
+            index: Index number for the row.
+            delete_measurement: Function to use for deleting the data row.
+        """
         super().__init__()
         self.data = data
         self.index = index
@@ -10,6 +19,8 @@ class BP_History_Row(QWidget):
         self.setup_ui()
 
     def setup_ui(self):
+        """Set up the row to be visible in results view."""
+        
         layout = QHBoxLayout()
         layout.addSpacing(50)
         self.setLayout(layout)
