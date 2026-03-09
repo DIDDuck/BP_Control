@@ -4,13 +4,13 @@ from PySide6.QtCore import Qt
 
 
 class BP_Form_Row(QWidget):
-    """Creates one row in results form."""
+    """Creates one empty row in results form."""
 
     def __init__(self, rowtext: str = ""):
         """Initialize the row.
         
         Args:
-            rowtext: Optional text in the beginning of the row.
+            rowtext (str, optional): Label text in the beginning of the row. Defaults to "".
         """
         super().__init__()
         self.rowtext = rowtext
@@ -18,7 +18,7 @@ class BP_Form_Row(QWidget):
         self.setup_gui()
 
     def setup_gui(self):
-        """Set up the results form GUI."""
+        """Set up the form GUI."""
 
         layout = QHBoxLayout()
         layout.addSpacing(50)

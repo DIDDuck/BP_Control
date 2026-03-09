@@ -8,9 +8,9 @@ class BP_History_Row(QWidget):
         """Initialize the row.
         
         Args:
-            data: Data for the row in a list of strings.
-            index: Index number for the row.
-            delete_measurement: Function to use for deleting the data row.
+            data (list[str]): Data for the row in a list of strings.
+            index (int): Index number for the row.
+            delete_measurement (function): Function to use for deleting the data row.
         """
         super().__init__()
         self.data = data
