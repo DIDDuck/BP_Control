@@ -19,11 +19,18 @@ import matplotlib.pyplot as plt
         
 
 class BP_Control(QWidget):
-    def __init__(self):
+    """Blood pressure tracker."""
+
+    def __init__(self, file_name: str = "data.csv"):
+        """
+        Args:
+            file_name (str, optional): Name of the file where to save data. Defaults to "data.csv".
+        """
+
         super().__init__()
         self.ROWTEXTS = ["", "Morning 1", "Morning 2", "Evening 1", "Evening 2"]
         self.graph_exists = False
-        self.file_name = "data.csv"
+        self.file_name = file_name
         self.data = self.read_file(self.file_name)
         self.update_dataframe()
 
@@ -39,6 +46,8 @@ class BP_Control(QWidget):
         self.show()
 
     def setup_layout(self):
+        """Set up layout."""
+
         # Page/main layout
         self.page_layout = QVBoxLayout()
         
@@ -52,6 +61,8 @@ class BP_Control(QWidget):
         self.averages_layout = QHBoxLayout()
 
     def setup_widgets(self):
+        """Set up main sections: header, form, buttons, averages and history"""
+
         # Header
         self.header = QLabel("Blood Pressure Control")
         self.header.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -94,7 +105,7 @@ class BP_Control(QWidget):
 
         self.page_layout.addWidget(graph_all_button)
 
-        # Results
+        # Results History
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setStyleSheet("border-radius: 10px")
@@ -112,6 +123,13 @@ class BP_Control(QWidget):
 
 
     def on_delete_refresh_results(self, results: list[BP_History_Row], idx_to_remove: int):
+        """Refresh results history view after user clicks Delete.
+        
+        Args:
+            results (list[BP_History_Row]): History view to refresh.
+            idx_to_remove (int): Result history row index to remove from view.
+        """
+
         results = results[0:idx_to_remove] + results[idx_to_remove + 1:]
         for index, row in enumerate(self.data):
             results[index].index = index # update index number for every BP_History_Row
@@ -120,6 +138,11 @@ class BP_Control(QWidget):
 
 
     def on_save_refresh_results(self, form_data: dict):
+        """Refresh results history view after user clicks Save Results.
+        
+        Args:
+            form_data (dict): Data user entered into form. Will be added to results history view.
+        """
         index = len(self.data)
         for row_data in form_data.values():
             row_widget = BP_History_Row(row_data, index, self.delete_measurement)
@@ -131,6 +154,15 @@ class BP_Control(QWidget):
         
 
     def read_file(self, file_name: str) -> list[list[str]]:
+        """Read file containing measurement history.
+        
+        Args:
+            file_name (str): File name to read the data from.
+
+        Returns:
+            list[list[str]]: List of measurement history rows (list[str]).  
+        """
+
         data = []
         try:
             with open(file_name, "r") as file:
@@ -149,8 +181,17 @@ class BP_Control(QWidget):
     
 
     def update_dataframe(self):
+        """Update data in Pandas dataframes (morning and evening) created from measurement history."""
 
         def check_time(dt: str):
+            """Check time to decide if it's morning or evening.
+            
+            Args:
+                dt (str): Date and time in a string.
+
+            Returns:
+                str: "morning" or "evening".
+            """
             t = time.strptime(dt, "%d.%m.%Y %H.%M")
             if t < time(hour = 12):
                 return "morning" 
@@ -178,6 +219,7 @@ class BP_Control(QWidget):
 
 
     def plot_data(self):
+        """Plot measurement history using matplotlib.pyplot."""
 
         if self.df.size == 0:
             return
@@ -219,18 +261,16 @@ class BP_Control(QWidget):
             
 
     def read_form(self):
+        """Read data user entered into the form. After that empty the form."""
         # Find form row objects (remove the header row)
         rows = self.form_layout.parentWidget().findChildren(BP_Form_Row)[1:] 
-        # print(rows)
         
         form_data = {}
         for index, row in enumerate(rows):
-            line_edit_fields = row.findChildren(QLineEdit)
+            line_edit_fields = row.findChildren(QLineEdit) # includes QDateTimeEdit which inherits from QLineEdit internally in Qt
             form_data[f"row_{index + 1}"] = []
             for field in line_edit_fields:
                 form_data[f"row_{index + 1}"].append(field.text())
-
-        # print(f"Form data: {form_data}")
 
         cleared_data = self.save_measurements(form_data, self.file_name)
         self.on_save_refresh_results(cleared_data)
@@ -245,6 +285,15 @@ class BP_Control(QWidget):
 
     
     def save_measurements(self, data: dict, file_name: str) -> dict:
+        """Save measurement data in a dictionary to a file. Append data instead of overwriting existing data.
+        
+        Args:
+            data (dict): Measurement data to save.
+            file_name (str): File name where to save data.
+
+        Returns:
+            dict: Valid user data. 
+        """
         checked_data = {}
         try:
             with open(file_name, "a", newline="") as file:
@@ -266,6 +315,15 @@ class BP_Control(QWidget):
 
 
     def is_valid_data(self, value: list[str]) -> bool:
+        """Checks that data input in value is in valid form.
+        
+        Args:
+            value (list[str]): Data that should be checked.
+
+        Returns:
+            bool: Valid data returns True otherwise False.
+        """
+
         if not all(value): # Check that every field at least has a value
             return False
         
@@ -279,6 +337,12 @@ class BP_Control(QWidget):
 
 
     def delete_measurement(self, line_index: int):
+        """Remove chosen measurement result from measurement results file and call view update.
+        
+        Args:
+            line_index (int): Index number of measurement line that needs to be deleted in results file.
+        """
+
         print(f"Delete button clicked. Index number of measurement is {line_index}")
 
         try:
@@ -296,12 +360,13 @@ class BP_Control(QWidget):
         self.results_layout.removeWidget(widget_to_remove) # remove widget from layout
         widget_to_remove.deleteLater() # delete the widget itself (not immediately but later)
 
-        # Update results view
+        # Update results history view
         children = self.results_widget.findChildren(BP_History_Row) # still includes the widget we want to remove
         self.on_delete_refresh_results(children, line_index)
 
     
     def calculate_averages(self):
+        """Calculate averages of measurements and update averages view."""
 
         # No data available
         if self.df.size == 0:
